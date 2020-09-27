@@ -1,23 +1,17 @@
 class Pc
-  # Подключаем встроенную библиотеку csv для работы с csv файлами
   require 'csv'
 
+  # Меняет на числа те строки, который выражают собой числа
   def self.reveal_integers(arr)
     arr.map { |val| val.match?(/\A\d+\z/) ? val.to_i : val }
   end
-
-  # Считываем csv файлы и заменяем в массивах все цифры записанные как строки
-  # в целочисленные значения
+  
   @csv_vms     = CSV.open('02_ruby_vms.csv').map { |item| reveal_integers(item) }
   @csv_prices  = CSV.open('02_ruby_prices.csv').map { |item| reveal_integers(item) }
   @csv_volumes = CSV.open('02_ruby_volumes.csv').map { |item| reveal_integers(item) }
 
-  # Находит n самых дорогих ВС
+  # Выводит n самых дорогих ВМ
   def self.most_expensive(quantity = 1)
-  
-    # Проверка на ввод 0 или отрицательных значений
-    # В случае некорректного ввода прерывает работу программы выводом сообщения  
-    # в терминал
     check_quantity(quantity)
 
     # Общий метод который находит максимальные значения из массива стоимостей
@@ -25,12 +19,8 @@ class Pc
     find_and_report(quantity, :max_by, array_of_costs)
   end
 
-  # Находит n самых дешевых ВС
+  # Выводит n самых дешевых ВМ
   def self.cheapest(quantity = 1)
-  
-    # Проверка на ввод 0 или отрицательных значений
-    # В случае некорректного ввода прерывает работу программы выводом сообщения  
-    # в ерминал
     check_quantity(quantity)
 
     # Общий метод который находит минимальные значения из массива стоимостей
@@ -40,10 +30,6 @@ class Pc
 
   # Выводит n самых объемных ВМ по параметру type
   def self.largest_by_type(quantity = 1, type)
-
-    # Проверка на ввод 0 или отрицательных значений
-    # В случае некорректного ввода прерывает работу программы выводом сообщения  
-    # в терминал
     check_quantity(quantity)
 
     # Общий метод который находит максимальные значения из массива объемов
@@ -54,10 +40,6 @@ class Pc
   # Выводит n ВМ у которых подключено больше всего дополнительных дисков по
   # количеству и с учетом типа диска если параметр hdd_type указан
   def self.most_additional_disks_attached_quantity(pc_quantity = 1, hdd_type = nil)
-    
-    # Проверка на ввод 0 или отрицательных значений
-    # В случае некорректного ввода прерывает работу программы выводом сообщения 
-    # в терминал
     check_quantity(pc_quantity)
 
     # Общий метод который находит максимальные значения из массива колличества
@@ -69,10 +51,6 @@ class Pc
   # Выводит n ВМ у которых подключено больше всего дополнительных дисков
   # по объему и с учетом типа диска если параметр hdd_type указан
   def self.most_additional_disks_attached_volume(pc_quantity = 1, hdd_type = nil)
-
-    # Проверка на ввод 0 или отрицательных значений
-    # В случае некорректного ввода прерывает работу программы выводом сообщения 
-    # в терминал
     check_quantity(pc_quantity)
 
     # Общий метод который находит максимальные значения из массива объемов
@@ -84,6 +62,8 @@ class Pc
   private
 
   # Проверка на ввод 0 или отрицательных значений
+  # В случае некорректного ввода прерывает работу программы выводом сообщения  
+  # в терминал
   def self.check_quantity(quantity)
     return STDOUT.puts 'Are you bored, master?' unless quantity.positive?
   end
@@ -91,7 +71,7 @@ class Pc
   # Метод, используемый другими методами для поиска нужных ВМ и выполнения отчета
   # Аргументы:
   #  quantity - количество элементов для запроса
-  #  choice   - символ нужного нам метода для запроса: max_by или min_by
+  #  choice   - название метода нужного для запроса: max_by или min_by
   #  array    - массив в котором нужно произвести выбор значений
   def self.find_and_report(quantity, choice, array)
     
@@ -249,8 +229,8 @@ class Pc
                         pc_disk_id    = disk[0]
                         disk_hdd_type = disk[1]
 
-                        # Если hdd_type nil значит мы не учитываем тип и выбираем
-                        # все диски нужной ВМ
+                        # Если hdd_type nil значит мы не учитываем тип и 
+                        # выбираем все диски нужной ВМ
                         if hdd_type == nil
                           pc_disk_id == pc_id
                         else
@@ -268,8 +248,6 @@ class Pc
 
   # Возвращает стоимость ВМ
   def self.find_cost(id)
-
-    # Кладем соответствующие цены в переменные
     cpu_price = @csv_prices[0][1]
     ram_price = @csv_prices[1][1]
 
@@ -279,7 +257,6 @@ class Pc
     pc_hdd_type     = @csv_vms[id][3]
     pc_hdd_capacity = @csv_vms[id][4]
 
-    # Высчитываем стоимость
     cost = pc_cpu          * cpu_price +
            pc_rum          * ram_price +
            pc_hdd_capacity * hdd_price(pc_hdd_type) +
