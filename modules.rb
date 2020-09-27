@@ -14,18 +14,21 @@ module Pc
   def self.most_expensive(quantity = 1)
     check_quantity(quantity)
 
-    find_and_report(quantity, 'max_by')
+    find_and_report(quantity, 'max_by', array_of_cost)
 
   end
 
   def self.cheapest(quantity = 1)
     check_quantity(quantity)
 
-    find_and_report(quantity, 'min_by')
+    find_and_report(quantity, 'min_by', array_of_cost)
 
   end
 
-  def self.largest_by_type_parameter(type)
+  def self.largest_by_type_parameter(type, quantity = 1)
+    check_quantity(quantity)
+
+    find_and_report(quantity, 'max_by', array_of_volumes(type))
     
   end
 
@@ -43,17 +46,17 @@ module Pc
     end
   end
 
-  def self.find_and_report(quantity, choice)
+  def self.find_and_report(quantity, choice, array)
     if quantity == 1
 
-      pc_id = array_of_cost.each_with_index
+      pc_id = array.each_with_index
               .send(choice.to_sym) { | cost, id | cost }
 
       report(pc_id)
 
     else
 
-      pc_ids = array_of_cost.each_with_index
+      pc_ids = array.each_with_index
                .send(choice.to_sym,quantity) { | cost ,id | cost }
 
       pc_ids.each do |pc_id|
@@ -123,4 +126,20 @@ module Pc
       end
   end
 
+  def self.array_of_volumes(type)
+    
+    arr_volumes = @csv_vms.map do |pc|
+
+      pc_driver     = pc[3] == type ? pc[4] : 0
+      pc_add_drivers = @csv_volumes.select do |driver|
+
+        driver[0] == pc[0] && driver[3] == type
+
+        end.inject(0) { |volume_sum, driver| driver[2] }
+      
+      pc_driver + pc_add_drivers
+
+    end
+
+  end
 end
