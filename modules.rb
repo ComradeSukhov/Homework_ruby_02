@@ -12,20 +12,55 @@ module Pc
 
 
   def self.most_expensive(quantity = 1)
-    STDOUT.puts array_of_cost.max(quantity)
+    check_quantity(quantity)
+
+    find_and_report(quantity, 'max_by')
+
   end
 
   def self.cheapest(quantity = 1)
-    STDOUT.puts array_of_cost.min(quantity)
+    check_quantity(quantity)
+
+    find_and_report(quantity, 'min_by')
+
   end
 
-  def self.largest_by_type_parameter
+  def self.largest_by_type_parameter(type)
+    
   end
 
   def self.most_additional_disks_attached_quantity
   end
 
   def self.most_additional_disks_attached_volume
+  end
+
+  private
+
+  def self.check_quantity(quantity)
+    if quantity.negative? || quantity.zero?
+      return STDOUT.puts 'Are you bored, master?'
+    end
+  end
+
+  def self.find_and_report(quantity, choice)
+    if quantity == 1
+
+      pc_id = array_of_cost.each_with_index
+              .send(choice.to_sym) { | cost, id | cost }
+
+      report(pc_id)
+
+    else
+
+      pc_ids = array_of_cost.each_with_index
+               .send(choice.to_sym,quantity) { | cost ,id | cost }
+
+      pc_ids.each do |pc_id|
+        report(pc_id)
+      end
+
+    end
   end
 
   def self.array_of_cost
@@ -48,7 +83,6 @@ module Pc
     end
 
       pc_costs.map{ |cost| cost / 100 }
-
   end
 
   def self.cost_add_hard_drives(pc_id)
@@ -64,11 +98,29 @@ module Pc
       end
       
     arr_costs_drivers.sum
-
   end
 
   def self.hdd_price(pc_hdd_type)
     @csv_prices.detect{ |price| price[0] == pc_hdd_type }[1]
+  end
+
+  def self.report(pc_id)
+    STDOUT.puts "    Cost of PC is #{pc_id.first} rubls
+
+      PC id           = #{@csv_vms[pc_id.last][0]}
+      PC CPU          = #{@csv_vms[pc_id.last][1]}
+      PC RUM          = #{@csv_vms[pc_id.last][2]}
+      PC HDD type     = #{@csv_vms[pc_id.last][3]}
+      PC HDD capacity = #{@csv_vms[pc_id.last][4]}
+      
+        PC additional hard drives:
+      "
+      
+      arr = @csv_volumes.select { |drivers| drivers[0] == pc_id[1] }.each do |d|
+        STDOUT.puts "      HDD type     = #{d[1]}"
+        STDOUT.puts "      HDD capacity = #{d[2]}"
+        STDOUT.puts "      -----------------------"
+      end
   end
 
 end

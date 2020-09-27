@@ -1,5 +1,5 @@
 require 'csv'
-require_relative 'class.rb'
+require_relative 'modules.rb'
 
-Pc.most_expensive
-Pc.cheapest
+Pc.most_expensive(2)
+Pc.cheapest 
