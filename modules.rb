@@ -24,8 +24,10 @@ module Pc
     find_and_report(quantity, :max_by, array_of_volumes(type))
   end
 
-  # def self.most_additional_disks_attached_quantity
-  # end
+  def self.most_additional_disks_attached_quantity(pc_quantity, hdd_type = nil)
+    check_quantity(pc_quantity)
+    find_and_report(pc_quantity, :max_by, array_of_quant_add_disks(hdd_type))
+  end
 
   # def self.most_additional_disks_attached_volume
   # end
@@ -113,6 +115,22 @@ module Pc
                        end.inject(0) { |volume_sum, driver| driver[2] }
 
       pc_driver + pc_add_drivers
+    end
+  end
+
+  def self.array_of_quant_add_disks(hdd_type)
+    array_of_quant = @csv_vms.map do |pc|
+                       pc_id     = pc[0]
+                       add_disks = @csv_volumes.select do |disk|
+                                     pc_disk_id    = disk[0]
+                                     disk_hdd_type = disk[1]
+                                      if hdd_type == nil
+                                        pc_disk_id == pc_id
+                                      else
+                                        pc_disk_id == pc_id && disk_hdd_type == hdd_type 
+                                      end
+                                   end
+                       add_disks.size
     end
   end
 end
