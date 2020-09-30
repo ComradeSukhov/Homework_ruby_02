@@ -199,7 +199,7 @@ class Pc
       # Из массива всех доп. дисков выбираем те, которые относятся к нужной ВМ
       # и подходящего типа
       pc_add_drivers = @csv_volumes.select do |driver|
-                         driver[0] == pc[0] && driver[3] == type
+                         driver[0] == pc[0] && driver[1] == type
                        end
 
       # Суммируем значения объемов дисков
@@ -208,7 +208,7 @@ class Pc
                           volume_sum + driver_vol
                         end
 
-      pc_driver_vol + pc_add_drivers
+      pc_driver_vol + pc_add_driv_vol
     end
   end
 
@@ -242,7 +242,7 @@ class Pc
   # будет соответствовать индексу ВМ в массиве @csv_vms
   def self.array_of_vol_add_disks(hdd_type)
     array_of_vol = @csv_vms.map do |pc|
-      pc_id         = pc[0]
+      pc_id = pc[0]
 
       # Выбираем нужные диски и кладем в массив
       add_disks_vol = @csv_volumes.select do |disk|
@@ -258,12 +258,18 @@ class Pc
                         end
                       end
       
-      # 
-      add_disks_vol.inject(0) { |sum, disk| sum + disk[2] }
+      # Суммируем объемы всех дисков
+      add_disks_vol.inject(0) do |sum, disk|
+                      disk_vol = disk[2]
+                      sum + disk_vol
+                    end
     end
   end
 
+  # Возвращает стоимость ВМ
   def self.find_cost(id)
+
+    # Кладем соответствующие цены в переменные
     cpu_price = @csv_prices[0][1]
     ram_price = @csv_prices[1][1]
 
@@ -273,10 +279,13 @@ class Pc
     pc_hdd_type     = @csv_vms[id][3]
     pc_hdd_capacity = @csv_vms[id][4]
 
+    # Высчитываем стоимость
     cost = pc_cpu          * cpu_price +
            pc_rum          * ram_price +
            pc_hdd_capacity * hdd_price(pc_hdd_type) +
            additional_hdd_cost(pc_id)
+
+    # Цены изначально указаны в копейках. Переводим стоимость в рубли
     cost / 100 
   end
 end
