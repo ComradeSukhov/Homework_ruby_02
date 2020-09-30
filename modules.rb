@@ -1,83 +1,171 @@
-module Pc
+class Pc
+  # Подключаем встроенную библиотеку csv для работы с csv файлами
   require 'csv'
 
   def self.reveal_integers(arr)
     arr.map { |val| val.match?(/\A\d+\z/) ? val.to_i : val }
   end
 
+  # Считываем csv файлы и заменяем в массивах все цифры записанные как строки
+  # в целочисленные значения
   @csv_vms     = CSV.open('02_ruby_vms.csv').map { |item| reveal_integers(item) }
   @csv_prices  = CSV.open('02_ruby_prices.csv').map { |item| reveal_integers(item) }
   @csv_volumes = CSV.open('02_ruby_volumes.csv').map { |item| reveal_integers(item) }
 
+  # Находит n самых дорогих ВС
   def self.most_expensive(quantity = 1)
+  
+    # Проверка на ввод 0 или отрицательных значений
+    # В случае некорректного ввода прерывает работу программы выводом сообщения  
+    # в терминал
     check_quantity(quantity)
+
+    # Общий метод который находит максимальные значения из массива стоимостей
+    # ВМ и выводит отчет пользователю в терминал
     find_and_report(quantity, :max_by, array_of_costs)
   end
 
+  # Находит n самых дешевых ВС
   def self.cheapest(quantity = 1)
+  
+    # Проверка на ввод 0 или отрицательных значений
+    # В случае некорректного ввода прерывает работу программы выводом сообщения  
+    # в ерминал
     check_quantity(quantity)
+
+    # Общий метод который находит минимальные значения из массива стоимостей
+    # ВМ и выводит отчет пользователю в терминал
     find_and_report(quantity, :min_by, array_of_costs)
   end
 
-  def self.largest_by_type(type, quantity = 1)
+  # Выводит n самых объемных ВМ по параметру type
+  def self.largest_by_type(quantity = 1, type)
+
+    # Проверка на ввод 0 или отрицательных значений
+    # В случае некорректного ввода прерывает работу программы выводом сообщения  
+    # в терминал
     check_quantity(quantity)
+
+    # Общий метод который находит максимальные значения из массива объемов
+    # дисков ВМ с требуемым типом и выводит отчет пользователю в терминал
     find_and_report(quantity, :max_by, array_of_volumes(type))
   end
 
-  def self.most_additional_disks_attached_quantity(pc_quantity, hdd_type = nil)
+  # Выводит n ВМ у которых подключено больше всего дополнительных дисков по
+  # количеству и с учетом типа диска если параметр hdd_type указан
+  def self.most_additional_disks_attached_quantity(pc_quantity = 1, hdd_type = nil)
+    
+    # Проверка на ввод 0 или отрицательных значений
+    # В случае некорректного ввода прерывает работу программы выводом сообщения 
+    # в терминал
     check_quantity(pc_quantity)
+
+    # Общий метод который находит максимальные значения из массива колличества
+    # дополнительных дисков ВМ с требуемым типом или все подряд если тип не 
+    # указан и выводит отчет пользователю в терминал
     find_and_report(pc_quantity, :max_by, array_of_quant_add_disks(hdd_type))
   end
 
-  # def self.most_additional_disks_attached_volume
-  # end
+  # Выводит n ВМ у которых подключено больше всего дополнительных дисков
+  # по объему и с учетом типа диска если параметр hdd_type указан
+  def self.most_additional_disks_attached_volume(pc_quantity = 1, hdd_type = nil)
+
+    # Проверка на ввод 0 или отрицательных значений
+    # В случае некорректного ввода прерывает работу программы выводом сообщения 
+    # в терминал
+    check_quantity(pc_quantity)
+
+    # Общий метод который находит максимальные значения из массива объемов
+    # дополнительных дисков ВМ с требуемым типом и выводит отчет пользователю
+    # в терминал
+    find_and_report(pc_quantity, :max_by, array_of_vol_add_disks(hdd_type))
+  end
 
   private
 
+  # Проверка на ввод 0 или отрицательных значений
   def self.check_quantity(quantity)
     return STDOUT.puts 'Are you bored, master?' unless quantity.positive?
   end
 
+  # Метод, используемый другими методами для поиска нужных ВМ и выполнения отчета
+  # Аргументы:
+  #  quantity - количество элементов для запроса
+  #  choice   - символ нужного нам метода для запроса: max_by или min_by
+  #  array    - массив в котором нужно произвести выбор значений
   def self.find_and_report(quantity, choice, array)
+    
+    # В зависимости от количества нам нужно будет по разному вызывать метод send
     if quantity == 1
-      pc_id = array.each_with_index
-                   .send(choice) { |value, id| value }.last
+
+      # Индексируем массив что бы при поиске нужного значения вместе с ним
+      # получить и его индекс. Переменная содержит enumerator.
+      indexed_array = array.each_with_index
+
+      # Получаем массив с максимальным или минимальным значением и id значения,
+      # которое соответствует id ВМ 
+      value_and_id = indexed_array.send(choice) { |value, id| value }
+
+      # Берем id. Он потребуется для вызова метода отчетов
+      pc_id = value_and_id.last
 
       report(pc_id)
 
+    # В случае когда quantity больше единицы нам всегда нужно будет запускать
+    # метод max_by или min_by для находения нескольких значений. 
     else
-      pc_ids = array.each_with_index
-                    .send(choice, quantity) { |value, id| value }.last
+      indexed_array      = array.each_with_index
+      
+      # Получаем двумерный массив нажных нам значений в паре с id значения,
+      # которое соответствует id ВМ
+      value_and_id_array = indexed_array.send(choice, quantity) {|value,id|value}
 
+      # Получаем массив состоящий из id ВМ которые нужны для отчета
+      pc_ids = value_and_id_array.map { | value_and_id | value_and_id.last }
+
+      # Вызываем для каждого id ВМ отчет
       pc_ids.each do |pc_id|
         report(pc_id)
       end
     end
   end
 
+  # Возвращает массив стоимостей ВМ, в котором индекс значения
+  # будет соответствовать индексу ВМ в массиве @csv_vms
   def self.array_of_costs
     pc_costs  = @csv_vms.map do |pc|
-                  find_cost(pc.first)
+                  pc_id = pc.first  
+                  find_cost(pc_id)
                 end
-    pc_costs.map{ |cost| cost / 100 }
   end
 
+  # Возвращает стоимость дополнительных дисков ВМ
   def self.additional_hdd_cost(pc_id)
-    pc_driver_list    = @csv_volumes.select{ |drivers| drivers[0] == pc_id }
-    arr_costs_drivers = pc_driver_list.map do |driver|
+
+    # Получаем массив дополнительных дисков ВМ
+    pc_driver_arr = @csv_volumes.select do |drivers|
+                      driver_pc_id = drivers[0]
+                      driver_pc_id == pc_id
+                    end
+
+    # Получаем массив со стоимостями дисков ВМ
+    drivers_costs_array = pc_driver_arr.map do |driver|
                           hdd_type     = driver[1]
-                          hdd_capacity = driver[2].to_i
+                          hdd_capacity = driver[2]
                           hdd_price    = hdd_price(hdd_type)
 
                           hdd_capacity * hdd_price
                         end
-    arr_costs_drivers.sum
+
+    drivers_costs_array.sum
   end
 
+  # Возвращает цену на диск в зависимости от типа
   def self.hdd_price(pc_hdd_type)
     @csv_prices.detect{ |price| price[0] == pc_hdd_type }[1]
   end
 
+  # Выполняет отчет. Принимает id ВМ.
   def self.report(pc_id)
     STDOUT.puts "Cost of PC is #{find_cost(pc_id)} rubles\n" \
                 "\n" \
@@ -89,37 +177,89 @@ module Pc
                 "\n" \
                 "PC additional hard drives:\n"
 
-    @csv_volumes.select { |drivers| drivers[0] == pc_id[1] }.each do |d|
+    @csv_volumes.select { |drivers| drivers[0] == pc_id }.each do |d|
       STDOUT.puts "HDD type     = #{d[1]}\n" \
                   "HDD capacity = #{d[2]}\n" \
                   "-----------------------\n"
     end
+    STDOUT.puts "\n\n\n\n\n\n"
   end
 
+  # Возвращает массив сумм объемов дисков ВМ, в котором индекс значения
+  # будет соответствовать индексу ВМ в массиве @csv_vms
   def self.array_of_volumes(type)
+
+    # Используем .map что бы создать массив в котором id значений будут 
+    # соответствовать id ВМ в массиве @csv_vms
     arr_volumes = @csv_vms.map do |pc|
-      pc_driver      = pc[3] == type ? pc[4] : 0
+
+      # Если основой диск не подходящего типа, то в переменную кладем 0
+      pc_driver_vol = pc[3] == type ? pc[4] : 0
+
+      # Из массива всех доп. дисков выбираем те, которые относятся к нужной ВМ
+      # и подходящего типа
       pc_add_drivers = @csv_volumes.select do |driver|
                          driver[0] == pc[0] && driver[3] == type
-                       end.inject(0) { |volume_sum, driver| driver[2] }
+                       end
 
-      pc_driver + pc_add_drivers
+      # Суммируем значения объемов дисков
+      pc_add_driv_vol = pc_add_drivers.inject(0) do |volume_sum, driver|
+                          driver_vol = driver[2]
+                          volume_sum + driver_vol
+                        end
+
+      pc_driver_vol + pc_add_drivers
     end
   end
 
+  # Возвращает массив количеств дополнительных дисков, в котором индекс значения
+  # будет соответствовать индексу ВМ в массиве @csv_vms
   def self.array_of_quant_add_disks(hdd_type)
+    
+    # Используем .map что бы создать массив в котором id значений будут 
+    # соответствовать id ВМ в массиве @csv_vms
     array_of_quant = @csv_vms.map do |pc|
-                       pc_id     = pc[0]
-                       add_disks = @csv_volumes.select do |disk|
-                                     pc_disk_id    = disk[0]
-                                     disk_hdd_type = disk[1]
-                                      if hdd_type == nil
-                                        pc_disk_id == pc_id
-                                      else
-                                        pc_disk_id == pc_id && disk_hdd_type == hdd_type 
-                                      end
-                                   end
-                       add_disks.size
+      pc_id     = pc[0]
+
+      # Выбираем нужные диски и кладем в массив
+      add_disks = @csv_volumes.select do |disk|
+                    pc_disk_id    = disk[0]
+                    disk_hdd_type = disk[1]
+                    if hdd_type == nil
+                      pc_disk_id == pc_id
+                    else
+                      pc_disk_id == pc_id && disk_hdd_type == hdd_type 
+                    end
+                  end
+
+      # Так как каждый элемент это диск, то размер массива вернет нам количество
+      # дисков
+      add_disks.size
+    end
+  end
+
+  # Возвращает массив объемов дополнительных дисков, в котором индекс значения
+  # будет соответствовать индексу ВМ в массиве @csv_vms
+  def self.array_of_vol_add_disks(hdd_type)
+    array_of_vol = @csv_vms.map do |pc|
+      pc_id         = pc[0]
+
+      # Выбираем нужные диски и кладем в массив
+      add_disks_vol = @csv_volumes.select do |disk|
+                        pc_disk_id    = disk[0]
+                        disk_hdd_type = disk[1]
+
+                        # Если hdd_type nil значит мы не учитываем тип и выбираем
+                        # все диски нужной ВМ
+                        if hdd_type == nil
+                          pc_disk_id == pc_id
+                        else
+                          pc_disk_id == pc_id && disk_hdd_type == hdd_type 
+                        end
+                      end
+      
+      # 
+      add_disks_vol.inject(0) { |sum, disk| sum + disk[2] }
     end
   end
 
@@ -137,5 +277,6 @@ module Pc
            pc_rum          * ram_price +
            pc_hdd_capacity * hdd_price(pc_hdd_type) +
            additional_hdd_cost(pc_id)
+    cost / 100 
   end
 end
