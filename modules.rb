@@ -41,13 +41,13 @@ module Pc
   def self.find_and_report(quantity, choice, array)
     if quantity == 1
       pc_id = array.each_with_index
-                   .send(choice) { |cost, id| cost }
+                   .send(choice) { |value, id| value }.last
 
       report(pc_id)
 
     else
       pc_ids = array.each_with_index
-                    .send(choice, quantity) { |cost, id| cost }
+                    .send(choice, quantity) { |value, id| value }.last
 
       pc_ids.each do |pc_id|
         report(pc_id)
@@ -56,19 +56,8 @@ module Pc
   end
 
   def self.array_of_costs
-    cpu_price = @csv_prices[0][1]
-    ram_price = @csv_prices[1][1]
     pc_costs  = @csv_vms.map do |pc|
-                  pc_id           = pc[0]
-                  pc_cpu          = pc[1]
-                  pc_rum          = pc[2]
-                  pc_hdd_type     = pc[3]
-                  pc_hdd_capacity = pc[4]
-
-                  cost = pc_cpu          * cpu_price +
-                         pc_rum          * ram_price +
-                         pc_hdd_capacity * hdd_price(pc_hdd_type) +
-                         additional_hdd_cost(pc_id)
+                  find_cost(pc.first)
                 end
     pc_costs.map{ |cost| cost / 100 }
   end
@@ -90,13 +79,13 @@ module Pc
   end
 
   def self.report(pc_id)
-    STDOUT.puts "Cost of PC is #{pc_id.first} rubles\n" \
+    STDOUT.puts "Cost of PC is #{find_cost(pc_id)} rubles\n" \
                 "\n" \
-                "PC id           = #{@csv_vms[pc_id.last][0]}\n" \
-                "PC CPU          = #{@csv_vms[pc_id.last][1]}\n" \
-                "PC RUM          = #{@csv_vms[pc_id.last][2]}\n" \
-                "PC HDD type     = #{@csv_vms[pc_id.last][3]}\n" \
-                "PC HDD capacity = #{@csv_vms[pc_id.last][4]}\n" \
+                "PC id           = #{@csv_vms[pc_id][0]}\n" \
+                "PC CPU          = #{@csv_vms[pc_id][1]}\n" \
+                "PC RUM          = #{@csv_vms[pc_id][2]}\n" \
+                "PC HDD type     = #{@csv_vms[pc_id][3]}\n" \
+                "PC HDD capacity = #{@csv_vms[pc_id][4]}\n" \
                 "\n" \
                 "PC additional hard drives:\n"
 
@@ -132,5 +121,21 @@ module Pc
                                    end
                        add_disks.size
     end
+  end
+
+  def self.find_cost(id)
+    cpu_price = @csv_prices[0][1]
+    ram_price = @csv_prices[1][1]
+
+    pc_id           = id
+    pc_cpu          = @csv_vms[id][1]
+    pc_rum          = @csv_vms[id][2]
+    pc_hdd_type     = @csv_vms[id][3]
+    pc_hdd_capacity = @csv_vms[id][4]
+
+    cost = pc_cpu          * cpu_price +
+           pc_rum          * ram_price +
+           pc_hdd_capacity * hdd_price(pc_hdd_type) +
+           additional_hdd_cost(pc_id)
   end
 end
